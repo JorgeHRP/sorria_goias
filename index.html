@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automação de Agendamentos - Proposta Executiva</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A84FF;
+            --primary-dark: #0066CC;
+            --secondary: #FF375F;
+            --success: #32D74B;
+            --warning: #FF9F0A;
+            --bg-dark: #0A0E1A;
+            --bg-card: #141825;
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .slides-container {
+            display: flex;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100vh;
+        }
+
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            padding: 3rem 4rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .slide-header {
+            margin-bottom: 2rem;
+            animation: slideInDown 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .slide-number {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .slide-title {
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.1;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+        }
+
+        .slide-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .slide-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+            padding-bottom: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent-gradient);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent-gradient);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--secondary);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            height: 400px;
+            position: relative;
+        }
+
+        .chart-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            bottom: 3rem;
+            right: 3rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .nav-btn:disabled:hover {
+            background: var(--bg-card);
+            transform: scale(1);
+        }
+
+        /* Progress Indicator */
+        .progress-indicator {
+            position: fixed;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.75rem;
+            z-index: 1000;
+        }
+
+        .progress-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: var(--primary);
+            width: 32px;
+            border-radius: 5px;
+        }
+
+        /* Timeline */
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .timeline-item {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border-left: 4px solid var(--primary);
+            position: relative;
+        }
+
+        .timeline-month {
+            font-size: 0.875rem;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .timeline-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-description {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        /* Comparison Table */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .comparison-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .comparison-card.current {
+            border-top: 3px solid var(--secondary);
+        }
+
+        .comparison-card.future {
+            border-top: 3px solid var(--success);
+        }
+
+        .comparison-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .comparison-badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .comparison-badge.current {
+            background: rgba(255, 55, 95, 0.2);
+            color: var(--secondary);
+        }
+
+        .comparison-badge.future {
+            background: rgba(50, 215, 75, 0.2);
+            color: var(--success);
+        }
+
+        .comparison-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .comparison-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+        }
+
+        .comparison-label {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        .comparison-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-top: 0;
+        }
+
+        .highlight-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+        }
+
+        .highlight-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .highlight-description {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Animations */
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+            line-height: 1.6;
+        }
+
+        /* ROI Highlight */
+        .roi-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .roi-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem;
+            border-radius: 24px;
+            text-align: center;
+        }
+
+        .roi-label {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .roi-value {
+            font-size: 4.5rem;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .roi-description {
+            font-size: 1.125rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="slides-container" id="slidesContainer">
+        
+        <!-- SLIDE 1: Capa -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">01 / 08</div>
+                <h1 class="slide-title">Transformação Digital<br>em Agendamentos</h1>
+                <p class="slide-subtitle">Automação Inteligente via WhatsApp para Clínicas Odontológicas</p>
+            </div>
+            <div class="slide-content">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Unidades Gerenciadas</div>
+                        <div class="stat-value">50</div>
+                        <div class="stat-change positive">
+                            <span>→</span> Clínicas ativas
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Atendimentos Mensais</div>
+                        <div class="stat-value">60k</div>
+                        <div class="stat-change positive">
+                            <span>→</span> Volume atual
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Colaboradores Atuais</div>
+                        <div class="stat-value">50</div>
+                        <div class="stat-change negative">
+                            <span>→</span> Alto custo operacional
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Linhas Telefônicas</div>
+                        <div class="stat-value">50</div>
+                        <div class="stat-change negative">
+                            <span>→</span> Fragmentação de contato
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="highlight-box">
+                    <div class="highlight-title">🎯 Oportunidade Identificada</div>
+                    <p class="highlight-description" style="font-size: 1rem; line-height: 1.5;">
+                        Processo manual de confirmação de agendamentos gerando alto custo operacional, 
+                        baixa cobertura de confirmações e experiência fragmentada para os pacientes.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: Cenário Atual - Custos -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">02 / 08</div>
+                <h1 class="slide-title">Cenário Atual:<br>Análise de Custos</h1>
+                <p class="slide-subtitle">Operação 100% manual com alta dependência de recursos humanos</p>
+            </div>
+            <div class="slide-content">
+                <div class="card">
+                    <h3 class="chart-title">Composição de Custos por Colaborador</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem;">
+                        <div>
+                            <div class="comparison-items">
+                                <div class="comparison-item">
+                                    <span class="comparison-label">Salário Base</span>
+                                    <span class="comparison-value">R$ 1.550</span>
+                                </div>
+                                <div class="comparison-item">
+                                    <span class="comparison-label">Comissão Média</span>
+                                    <span class="comparison-value">R$ 300</span>
+                                </div>
+                                <div class="comparison-item">
+                                    <span class="comparison-label">Subtotal Bruto</span>
+                                    <span class="comparison-value">R$ 1.850</span>
+                                </div>
+                                <div class="comparison-item" style="background: rgba(10, 132, 255, 0.1);">
+                                    <span class="comparison-label">Encargos (80%)*</span>
+                                    <span class="comparison-value">R$ 1.480</span>
+                                </div>
+                                <div class="comparison-item" style="background: rgba(255, 55, 95, 0.15); border: 2px solid var(--secondary);">
+                                    <span class="comparison-label" style="font-weight: 700; color: var(--text-primary);">CUSTO TOTAL/MÊS</span>
+                                    <span class="comparison-value" style="color: var(--secondary); font-size: 1.75rem;">R$ 3.330</span>
+                                </div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">
+                                * Encargos incluem: 13º, férias, FGTS, INSS, rescisão
+                            </p>
+                        </div>
+                        <div>
+                            <div class="comparison-items">
+                                <div class="comparison-item">
+                                    <span class="comparison-label">50 Colaboradores</span>
+                                    <span class="comparison-value" style="color: var(--secondary);">R$ 166.500</span>
+                                </div>
+                                <div class="comparison-item">
+                                    <span class="comparison-label">50 Linhas Telefônicas</span>
+                                    <span class="comparison-value" style="color: var(--secondary);">R$ 4.000</span>
+                                </div>
+                                <div class="comparison-item" style="background: rgba(255, 55, 95, 0.2); border: 2px solid var(--secondary); margin-top: 1rem;">
+                                    <span class="comparison-label" style="font-weight: 700; color: var(--text-primary); font-size: 1.125rem;">CUSTO OPERACIONAL MENSAL</span>
+                                    <span class="comparison-value" style="color: var(--secondary); font-size: 2.25rem;">R$ 170.500</span>
+                                </div>
+                                <div class="comparison-item" style="background: rgba(255, 55, 95, 0.1);">
+                                    <span class="comparison-label">Projeção Anual</span>
+                                    <span class="comparison-value" style="color: var(--secondary);">R$ 2.046.000</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="margin-top: 1.5rem;">
+                    <div class="stat-card">
+                        <div class="stat-label">Cobertura Estimada</div>
+                        <div class="stat-value">~60%</div>
+                        <div class="stat-change negative">
+                            <span>↓</span> Limitação por volume
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Tentativas Médias</div>
+                        <div class="stat-value">2.5x</div>
+                        <div class="stat-change negative">
+                            <span>↑</span> Retrabalho constante
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: Problemas Identificados -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">03 / 08</div>
+                <h1 class="slide-title">Principais<br>Desafios</h1>
+                <p class="slide-subtitle">Limitações do modelo atual de operação</p>
+            </div>
+            <div class="slide-content">
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">💰</div>
+                        <div class="feature-title">Alto Custo Fixo</div>
+                        <div class="feature-description">
+                            R$ 170.500/mês em folha de pagamento e telefonia, 
+                            com custos que escalam proporcionalmente ao crescimento.
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📞</div>
+                        <div class="feature-title">Baixa Cobertura</div>
+                        <div class="feature-description">
+                            Apenas ~60% dos agendamentos confirmados devido a limitações 
+                            de tempo e disponibilidade dos colaboradores.
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <div class="feature-title">Retrabalho Elevado</div>
+                        <div class="feature-description">
+                            Média de 2.5 tentativas por agendamento, consumindo tempo 
+                            e gerando frustração tanto para equipe quanto pacientes.
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📱</div>
+                        <div class="feature-title">Fragmentação</div>
+                        <div class="feature-description">
+                            50 números diferentes confundem pacientes e impedem 
+                            uma comunicação unificada e profissional da marca.
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">⏰</div>
+                        <div class="feature-title">Horário Limitado</div>
+                        <div class="feature-description">
+                            Confirmações apenas em horário comercial, perdendo 
+                            oportunidades de contato em outros períodos.
+                        </div>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Falta de Dados</div>
+                        <div class="feature-description">
+                            Sem métricas precisas de performance, taxa de conversão 
+                            ou análise de padrões de comportamento dos pacientes.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box">
+                    <div class="highlight-title">💡 Impacto no Negócio</div>
+                    <p class="highlight-description" style="font-size: 1rem; line-height: 1.5;">
+                        <strong>Estimativa de 40% de faltas</strong> em consultas não confirmadas, 
+                        resultando em <strong>perda de receita de aproximadamente R$ 180.000/mês</strong> 
+                        considerando ticket médio de R$ 150 por consulta.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: Solução Proposta -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">04 / 08</div>
+                <h1 class="slide-title">Nossa<br>Solução</h1>
+                <p class="slide-subtitle">Automação inteligente via WhatsApp API Oficial</p>
+            </div>
+            <div class="slide-content">
+                <div class="features-grid">
+                    <div class="feature-card" style="grid-column: span 2; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%); border: 1px solid rgba(102, 126, 234, 0.3);">
+                        <div class="feature-icon" style="background: var(--primary);">✓</div>
+                        <div class="feature-title" style="font-size: 1.5rem; color: var(--primary);">WhatsApp API Oficial</div>
+                        <div class="feature-description" style="font-size: 1.125rem;">
+                            Integração com API oficial do Meta WhatsApp Business, garantindo 
+                            compliance, confiabilidade e alcance de 100% da base de pacientes.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <div class="feature-title">Automação Inteligente</div>
+                        <div class="feature-description">
+                            Disparo automático de mensagens personalizadas com nome do paciente, 
+                            data/hora da consulta e botões interativos de resposta.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔗</div>
+                        <div class="feature-title">Unificação de Contatos</div>
+                        <div class="feature-description">
+                            Um único número WhatsApp para toda a rede, fortalecendo 
+                            a identidade da marca e facilitando o contato dos pacientes.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">Respostas Instantâneas</div>
+                        <div class="feature-description">
+                            Confirmação, reagendamento ou cancelamento com 3 botões simples. 
+                            Processamento imediato sem necessidade de intervenção humana.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <div class="feature-title">100% de Cobertura</div>
+                        <div class="feature-description">
+                            Todos os 60 mil agendamentos mensais recebem confirmação 
+                            automática, eliminando gaps de comunicação.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <div class="feature-title">Fluxo Conversacional</div>
+                        <div class="feature-description">
+                            Mensagem humanizada: "Olá [Nome], confirme sua consulta de [Especialidade] 
+                            dia [Data] às [Hora]" + botões Confirmar / Remarcar / Cancelar.
+                        </div>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Dashboard Analytics</div>
+                        <div class="feature-description">
+                            Métricas em tempo real: taxa de resposta, confirmações, 
+                            reagendamentos, horários de pico e performance por unidade.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box" style="margin-top: 1rem;">
+                    <div class="highlight-title">🎯 Implementação Progressiva</div>
+                    <p class="highlight-description" style="font-size: 1rem; line-height: 1.5;">
+                        Seguindo políticas do Meta, a solução será implementada de forma gradual 
+                        para garantir alta qualidade de entrega e evitar bloqueios. 
+                        <strong>Piloto com 10 unidades, escalando progressivamente até cobertura total.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 5: Análise Financeira - Nova Operação -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">05 / 08</div>
+                <h1 class="slide-title">Novo Modelo:<br>Análise Financeira</h1>
+                <p class="slide-subtitle">Custos variáveis e escalabilidade inteligente</p>
+            </div>
+            <div class="slide-content">
+                <div class="comparison-container">
+                    <div class="comparison-card current">
+                        <div class="comparison-title">
+                            Modelo Atual
+                            <span class="comparison-badge current">Tradicional</span>
+                        </div>
+                        <div class="comparison-items">
+                            <div class="comparison-item">
+                                <span class="comparison-label">Folha de Pagamento</span>
+                                <span class="comparison-value" style="color: var(--secondary);">R$ 166.500</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Telefonia (50 linhas)</span>
+                                <span class="comparison-value" style="color: var(--secondary);">R$ 4.000</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Cobertura</span>
+                                <span class="comparison-value" style="color: var(--warning);">~60%</span>
+                            </div>
+                            <div class="comparison-item" style="background: rgba(255, 55, 95, 0.2); margin-top: 1rem;">
+                                <span class="comparison-label" style="font-weight: 700;">TOTAL MENSAL</span>
+                                <span class="comparison-value" style="color: var(--secondary); font-size: 1.75rem;">R$ 170.500</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comparison-card future">
+                        <div class="comparison-title">
+                            Modelo Automatizado
+                            <span class="comparison-badge future">Otimizado</span>
+                        </div>
+                        <div class="comparison-items">
+                            <div class="comparison-item">
+                                <span class="comparison-label">Mensagens (60k × R$ 0,07)</span>
+                                <span class="comparison-value" style="color: var(--success);">R$ 4.200</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Equipe Reduzida (10 pessoas)**</span>
+                                <span class="comparison-value" style="color: var(--success);">R$ 33.300</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Cobertura</span>
+                                <span class="comparison-value" style="color: var(--success);">100%</span>
+                            </div>
+                            <div class="comparison-item" style="background: rgba(50, 215, 75, 0.2); margin-top: 1rem;">
+                                <span class="comparison-label" style="font-weight: 700;">TOTAL MENSAL</span>
+                                <span class="comparison-value" style="color: var(--success); font-size: 1.75rem;">R$ 37.500</span>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">
+                            ** Equipe mantida para casos complexos, suporte e otimizações
+                        </p>
+                    </div>
+                </div>
+
+                <div class="roi-container" style="margin-top: 2rem;">
+                    <div class="card">
+                        <h3 class="chart-title">💰 Benefícios Financeiros</h3>
+                        <div class="comparison-items" style="margin-top: 1rem;">
+                            <div class="comparison-item">
+                                <span class="comparison-label">Economia Mensal</span>
+                                <span class="comparison-value" style="color: var(--success); font-size: 2rem;">R$ 133.000</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Economia Anual</span>
+                                <span class="comparison-value" style="color: var(--success); font-size: 2rem;">R$ 1.596.000</span>
+                            </div>
+                            <div class="comparison-item" style="background: rgba(50, 215, 75, 0.1);">
+                                <span class="comparison-label">Redução de Custos</span>
+                                <span class="comparison-value" style="color: var(--success); font-size: 2rem;">78%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="roi-highlight">
+                        <div class="roi-label">REDUÇÃO OPERACIONAL</div>
+                        <div class="roi-value">78%</div>
+                        <div class="roi-description">dos custos atuais</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: Roadmap de Implementação -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">06 / 08</div>
+                <h1 class="slide-title">Roadmap de<br>Implementação</h1>
+                <p class="slide-subtitle">Implantação gradual e segura em 7 meses</p>
+            </div>
+            <div class="slide-content">
+                <div class="timeline">
+                    <div class="timeline-item" style="border-left-color: var(--primary);">
+                        <div class="timeline-month">MESES 1-2 • Piloto</div>
+                        <div class="timeline-title">🎯 Fase Piloto (10 unidades)</div>
+                        <div class="timeline-description">
+                            <strong>Investimento:</strong> R$ 3.000/mês (10 unidades × R$ 300) + R$ 4.200 mensagens<br>
+                            Configuração inicial • Testes A/B • Ajuste de fluxos • Treinamento • Sem redução de pessoal<br>
+                            <strong style="color: var(--success);">Economia telefonia: R$ 800/mês</strong>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" style="border-left-color: var(--warning);">
+                        <div class="timeline-month">MESES 3-4 • Expansão 1</div>
+                        <div class="timeline-title">📈 Primeira Expansão (30 unidades total)</div>
+                        <div class="timeline-description">
+                            <strong>Investimento:</strong> R$ 9.000/mês (30 unidades × R$ 300) + R$ 4.200 mensagens<br>
+                            +20 unidades • Redução: -30% colaboradores (15 pessoas)<br>
+                            <strong style="color: var(--success);">Economia projetada: R$ 52.000/mês</strong>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" style="border-left-color: var(--success);">
+                        <div class="timeline-month">MESES 5-6 • Expansão 2</div>
+                        <div class="timeline-title">🚀 Segunda Expansão (50 unidades total)</div>
+                        <div class="timeline-description">
+                            <strong>Investimento:</strong> R$ 15.000/mês (50 unidades × R$ 300) + R$ 4.200 mensagens<br>
+                            Cobertura total • Redução: -60% colaboradores (30 pessoas)<br>
+                            <strong style="color: var(--success);">Economia projetada: R$ 104.000/mês</strong>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" style="border-left-color: var(--success);">
+                        <div class="timeline-month">MÊS 7+ • Otimização</div>
+                        <div class="timeline-title">✅ Operação Otimizada</div>
+                        <div class="timeline-description">
+                            <strong>Investimento:</strong> R$ 19.200/mês (R$ 15k + R$ 4.200)<br>
+                            Redução final: -80% colaboradores (40 pessoas) • Equipe de 10 para casos complexos<br>
+                            <strong style="color: var(--success);">Economia final: R$ 133.000/mês | R$ 1.596.000/ano</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box" style="margin-top: 1.5rem;">
+                    <div class="highlight-title">⚡ Modelo de Crescimento Progressivo</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1rem;">
+                        <div>
+                            <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">10 → 30 → 50</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Unidades progressivas</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.75rem; font-weight: 800; color: var(--success); margin-bottom: 0.5rem;">100%</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Cobertura final</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 1.75rem; font-weight: 800; color: var(--warning); margin-bottom: 0.5rem;">R$ 300</div>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Por unidade/mês</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 7: Impacto e Benefícios -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">07 / 08</div>
+                <h1 class="slide-title">Impacto e<br>Benefícios</h1>
+                <p class="slide-subtitle">Transformação além da economia de custos</p>
+            </div>
+            <div class="slide-content">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                    <div class="card">
+                        <h3 class="chart-title">💰 Impacto Financeiro Anual</h3>
+                        <div class="comparison-items" style="margin-top: 1.5rem;">
+                            <div class="comparison-item">
+                                <span class="comparison-label">Economia Direta</span>
+                                <span class="comparison-value" style="color: var(--success);">R$ 1.596.000</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Redução de Faltas (estimada)*</span>
+                                <span class="comparison-value" style="color: var(--success);">R$ 1.080.000</span>
+                            </div>
+                            <div class="comparison-item" style="background: rgba(50, 215, 75, 0.2); border: 2px solid var(--success); margin-top: 1rem;">
+                                <span class="comparison-label" style="font-weight: 700; font-size: 1.125rem;">IMPACTO TOTAL</span>
+                                <span class="comparison-value" style="color: var(--success); font-size: 2rem;">R$ 2.676.000</span>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">
+                            * Considerando redução de 50% nas faltas e ticket médio R$ 150/consulta
+                        </p>
+                    </div>
+
+                    <div class="card">
+                        <h3 class="chart-title">📊 Melhorias Operacionais</h3>
+                        <div class="stats-grid" style="margin-top: 1.5rem;">
+                            <div class="stat-card" style="background: rgba(10, 132, 255, 0.1);">
+                                <div class="stat-label">Taxa de Resposta</div>
+                                <div class="stat-value" style="font-size: 2rem;">78%</div>
+                                <div class="stat-change positive">
+                                    <span>↑</span> +18% vs atual
+                                </div>
+                            </div>
+                            <div class="stat-card" style="background: rgba(10, 132, 255, 0.1);">
+                                <div class="stat-label">Tempo de Resposta</div>
+                                <div class="stat-value" style="font-size: 2rem;">&lt;5min</div>
+                                <div class="stat-change positive">
+                                    <span>↓</span> vs 4-8 horas
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card" style="background: linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(10, 132, 255, 0.05) 100%);">
+                        <div class="feature-icon" style="background: var(--primary);">👥</div>
+                        <div class="feature-title">Experiência do Paciente</div>
+                        <div class="feature-description">
+                            Confirmação instantânea via canal preferido (WhatsApp). 
+                            Opções claras de ação. Comunicação unificada e profissional.
+                        </div>
+                    </div>
+
+                    <div class="feature-card" style="background: linear-gradient(135deg, rgba(50, 215, 75, 0.1) 0%, rgba(50, 215, 75, 0.05) 100%);">
+                        <div class="feature-icon" style="background: var(--success);">⚡</div>
+                        <div class="feature-title">Eficiência Operacional</div>
+                        <div class="feature-description">
+                            Equipe focada em casos complexos e relacionamento. 
+                            Processos padronizados. Escalabilidade sem crescimento proporcional de custo.
+                        </div>
+                    </div>
+
+                    <div class="feature-card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);">
+                        <div class="feature-icon" style="background: var(--accent-gradient);">📈</div>
+                        <div class="feature-title">Inteligência de Dados</div>
+                        <div class="feature-description">
+                            Dashboard com métricas em tempo real. Identificação de padrões. 
+                            Previsão de demanda. Otimização contínua baseada em dados.
+                        </div>
+                    </div>
+
+                    <div class="feature-card" style="background: linear-gradient(135deg, rgba(255, 159, 10, 0.1) 0%, rgba(255, 159, 10, 0.05) 100%);">
+                        <div class="feature-icon" style="background: var(--warning);">🛡️</div>
+                        <div class="feature-title">Compliance e Segurança</div>
+                        <div class="feature-description">
+                            API oficial WhatsApp com compliance LGPD. Criptografia end-to-end. 
+                            Rastreabilidade completa de comunicações.
+                        </div>
+                    </div>
+
+                    <div class="feature-card" style="background: linear-gradient(135deg, rgba(255, 55, 95, 0.1) 0%, rgba(255, 55, 95, 0.05) 100%);">
+                        <div class="feature-icon" style="background: var(--secondary);">🎯</div>
+                        <div class="feature-title">Redução de No-Shows</div>
+                        <div class="feature-description">
+                            Lembretes automatizados em múltiplos momentos. 
+                            Facilidade para reagendamento. Redução estimada de 50% em faltas.
+                        </div>
+                    </div>
+
+                    <div class="feature-card" style="background: linear-gradient(135deg, rgba(10, 132, 255, 0.1) 0%, rgba(10, 132, 255, 0.05) 100%);">
+                        <div class="feature-icon" style="background: var(--primary);">🚀</div>
+                        <div class="feature-title">Escalabilidade</div>
+                        <div class="feature-description">
+                            Expansão para novas unidades sem aumento proporcional de custos. 
+                            Infraestrutura preparada para crescimento exponencial.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: Investimento e Próximos Passos -->
+        <div class="slide">
+            <div class="slide-header">
+                <div class="slide-number">08 / 08</div>
+                <h1 class="slide-title">Investimento e<br>Próximos Passos</h1>
+                <p class="slide-subtitle">Estrutura comercial clara e previsível</p>
+            </div>
+            <div class="slide-content">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="card" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%); border: 1px solid rgba(102, 126, 234, 0.4);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600;">SETUP INICIAL</div>
+                            <div style="font-size: 3rem; font-weight: 900; color: var(--primary); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.5rem;">R$ 15k</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Parcelado em 2x</div>
+                            <div style="font-size: 1rem; color: var(--primary); margin-top: 0.5rem; font-weight: 700;">R$ 7.500/mês</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">(apenas 2 meses)</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(50, 215, 75, 0.15) 0%, rgba(48, 182, 71, 0.15) 100%); border: 1px solid rgba(50, 215, 75, 0.4);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600;">MENSALIDADE</div>
+                            <div style="font-size: 3rem; font-weight: 900; color: var(--success); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.5rem;">R$ 300</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Por unidade/mês</div>
+                            <div style="font-size: 1rem; color: var(--success); margin-top: 0.5rem; font-weight: 700;">R$ 15.000/mês</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">(50 unidades)</div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="background: linear-gradient(135deg, rgba(10, 132, 255, 0.15) 0%, rgba(0, 102, 204, 0.15) 100%); border: 1px solid rgba(10, 132, 255, 0.4);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600;">MENSAGENS</div>
+                            <div style="font-size: 3rem; font-weight: 900; color: var(--primary); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.5rem;">R$ 0,07</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Por mensagem</div>
+                            <div style="font-size: 1rem; color: var(--primary); margin-top: 0.5rem; font-weight: 700;">R$ 4.200/mês</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">(60k mensagens)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roi-container" style="margin-bottom: 2rem;">
+                    <div class="card">
+                        <h3 class="chart-title">💰 Análise de Investimento</h3>
+                        <div class="comparison-items" style="margin-top: 1rem;">
+                            <div class="comparison-item">
+                                <span class="comparison-label">Setup (2x parcelas) - primeiros 2 meses</span>
+                                <span class="comparison-value">R$ 7.500</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Mensalidade (50 unidades)</span>
+                                <span class="comparison-value">R$ 15.000</span>
+                            </div>
+                            <div class="comparison-item">
+                                <span class="comparison-label">Mensagens (60k)</span>
+                                <span class="comparison-value">R$ 4.200</span>
+                            </div>
+                            <div class="comparison-item" style="background: rgba(10, 132, 255, 0.15); border: 2px solid var(--primary); margin-top: 0.5rem;">
+                                <span class="comparison-label" style="font-weight: 700;">INVESTIMENTO MESES 1-2</span>
+                                <span class="comparison-value" style="color: var(--primary); font-size: 1.5rem;">R$ 26.700</span>
+                            </div>
+                            <div class="comparison-item" style="background: rgba(50, 215, 75, 0.1); margin-top: 0.25rem;">
+                                <span class="comparison-label">Investimento Mês 3+</span>
+                                <span class="comparison-value" style="color: var(--success); font-size: 1.5rem;">R$ 19.200</span>
+                            </div>
+                            <div class="comparison-item" style="background: rgba(50, 215, 75, 0.2); border: 2px solid var(--success); margin-top: 0.5rem;">
+                                <span class="comparison-label" style="font-weight: 700; color: var(--text-primary);">ECONOMIA LÍQUIDA MENSAL</span>
+                                <span class="comparison-value" style="color: var(--success); font-size: 2rem;">R$ 113.800</span>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 1rem;">
+                            * Economia considerando regime pleno (50 unidades ativas)
+                        </p>
+                    </div>
+
+                    <div class="roi-highlight" style="background: linear-gradient(135deg, #32D74B 0%, #30B647 100%);">
+                        <div class="roi-label">RETORNO SOBRE INVESTIMENTO</div>
+                        <div class="roi-value">593%</div>
+                        <div class="roi-description">Economia vs Investimento</div>
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.3);">
+                            <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">PAYBACK SETUP</div>
+                            <div style="font-size: 2.5rem; font-weight: 900;">1 mês</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline">
+                    <div class="timeline-item" style="border-left-color: var(--primary);">
+                        <div class="timeline-month">ETAPA 1 • 2 SEMANAS</div>
+                        <div class="timeline-title">📋 Diagnóstico & Planejamento</div>
+                        <div class="timeline-description">
+                            Mapeamento de fluxos • Análise de integrações • Definição de KPIs • Seleção das 10 unidades piloto
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" style="border-left-color: var(--warning);">
+                        <div class="timeline-month">ETAPA 2 • 3 SEMANAS</div>
+                        <div class="timeline-title">⚙️ Setup Técnico</div>
+                        <div class="timeline-description">
+                            Configuração WhatsApp API • Desenvolvimento dos fluxos • Integração com sistema • Dashboard analytics
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" style="border-left-color: var(--success);">
+                        <div class="timeline-month">ETAPA 3 • 1 MÊS</div>
+                        <div class="timeline-title">🧪 Piloto com Desconto Especial</div>
+                        <div class="timeline-description">
+                            <strong style="color: var(--success);">Benefício: 50% OFF na mensalidade durante piloto</strong> • 10 unidades • 
+                            Testes e validação • Métricas • Ajustes
+                        </div>
+                    </div>
+
+                    <div class="timeline-item" style="border-left-color: var(--success);">
+                        <div class="timeline-month">ETAPA 4 • PROGRESSIVA</div>
+                        <div class="timeline-title">🚀 Expansão Gradual</div>
+                        <div class="timeline-description">
+                            10 → 30 → 50 unidades • Monitoramento • Redução progressiva da equipe • ROI crescente
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-box" style="margin-top: 1.5rem; background: linear-gradient(135deg, rgba(10, 132, 255, 0.2) 0%, rgba(102, 126, 234, 0.2) 100%); border-color: var(--primary);">
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: center;">
+                        <div>
+                            <div class="highlight-title" style="font-size: 1.5rem; margin-bottom: 0.75rem;">
+                                🎁 Oferta de Lançamento
+                            </div>
+                            <p class="highlight-description" style="font-size: 1rem; color: var(--text-primary); line-height: 1.6;">
+                                ✓ <strong>50% desconto</strong> na mensalidade durante piloto (mês 1)<br>
+                                ✓ <strong>Setup parcelado</strong> em 2x sem juros<br>
+                                ✓ <strong>Suporte prioritário</strong> 24/7<br>
+                                ✓ <strong>SLA 99%</strong> uptime garantido
+                            </p>
+                        </div>
+                        <div style="text-align: center; padding: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 12px;">
+                            <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.5rem;">ECONOMIA PILOTO</div>
+                            <div style="font-size: 2rem; font-weight: 900; color: var(--success);">R$ 1.500</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">no primeiro mês</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-radius: 16px;">
+                    <p style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                        Pronto para economizar R$ 1,6M/ano e transformar sua operação?
+                    </p>
+                    <div style="font-size: 1.75rem; font-weight: 800; color: var(--primary);">
+                        📅 Próximo Passo: Reunião de Alinhamento
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="navigation">
+        <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">←</button>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">→</button>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="progress-indicator" id="progressIndicator"></div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 8;
+        const slidesContainer = document.getElementById('slidesContainer');
+        const progressIndicator = document.getElementById('progressIndicator');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Create progress dots
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'progress-dot';
+            dot.onclick = () => goToSlide(i);
+            progressIndicator.appendChild(dot);
+        }
+
+        function updateSlide() {
+            slidesContainer.style.transform = `translateX(-${currentSlide * 100}vw)`;
+            
+            // Update progress dots
+            const dots = progressIndicator.children;
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].classList.toggle('active', i === currentSlide);
+            }
+
+            // Update button states
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === totalSlides - 1;
+            
+            // Scroll to top when changing slides
+            const currentSlideElement = slidesContainer.children[currentSlide];
+            if (currentSlideElement) {
+                currentSlideElement.scrollTop = 0;
+            }
+        }
+
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 0 && newSlide < totalSlides) {
+                currentSlide = newSlide;
+                updateSlide();
+            }
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateSlide();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+        });
+
+        // Initialize
+        updateSlide();
+    </script>
+</body>
+</html>
